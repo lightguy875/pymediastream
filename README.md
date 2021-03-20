@@ -1,2 +1,2 @@
 # pymediastream
-stream usando biblioteca pydash
+stream com a plataforma pydash
