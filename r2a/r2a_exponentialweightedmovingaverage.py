@@ -47,7 +47,6 @@ class R2A_ExponentialWeightedMovingAverage(IR2A):
         else: 
             self.smooth.append(df.values.tolist()[-1][-1]) 
         
-        print(self.smooth[-1])
         selected_qi = self.qi[0]
         for i in self.qi:
             if self.smooth[-1] > i:
