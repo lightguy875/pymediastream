@@ -2,3 +2,6 @@
 
 # python cached files
 *.pyc
+
+#images
+*.png
