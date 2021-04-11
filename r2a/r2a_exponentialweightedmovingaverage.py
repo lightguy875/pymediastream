@@ -29,22 +29,16 @@ class R2A_ExponentialWeightedMovingAverage(IR2A):
 
         self.t = time.perf_counter() - self.request_time
         self.throughputs.append(msg.get_bit_length() / self.t)
-        if self.estimateband[-1] != 0:
-            self.estimateband.append(((self.k*(self.w - max(0,(self.estimateband[-1]-self.throughputs[-1] + self.w))))*self.t) + self.estimateband[-1])
-        else:
-            self.estimateband.append(self.throughputs[-1])
+        self.estimateband.append(((self.k*(self.w - max(0,(self.estimateband[-1]-self.throughputs[-1] + self.w))))*self.t) + self.estimateband[-1])
         self.send_up(msg)
 
     def handle_segment_size_request(self, msg):
+
         self.request_time = time.perf_counter()
         df = DataFrame (self.estimateband,columns=['throughputs'])
-        df.ewm(alpha=0.5,min_periods=5).mean()
+        df.ewm(alpha=0.5).mean()
         valor = df.values.tolist()[-1][-1]
-
-        if self.smooth[-1] != 0:
-            self.smooth.append((-self.alfa*(valor - self.estimateband[-1])*self.t) + valor)
-        else: 
-            self.smooth.append(valor) 
+        self.smooth.append((-self.alfa*(valor - self.estimateband[-1])*self.t) + valor)
 
         selected_qi = self.qi[0]
         for i in self.qi:
@@ -57,11 +51,8 @@ class R2A_ExponentialWeightedMovingAverage(IR2A):
     def handle_segment_size_response(self, msg):
         self.t = time.perf_counter() - self.request_time
         self.throughputs.append(msg.get_bit_length() / self.t)
+        self.estimateband.append((self.k*(self.w - (self.estimateband[-1]-self.throughputs[-1] + self.w))*self.t) + self.estimateband[-1])
 
-        if self.estimateband[-1] != 0:
-            self.estimateband.append((self.k*(self.w - (self.estimateband[-1]-self.throughputs[-1] + self.w))*self.t) + self.estimateband[-1])
-        else:
-            self.estimateband.append(self.throughputs[-1])
 
         self.send_up(msg)
 
