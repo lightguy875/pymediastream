@@ -18,6 +18,10 @@ class R2A_ExponentialWeightedMovingAverage(IR2A):
         self.w = 0.3
         self.alfa = 0.2
         self.t = 0
+        self.deltaup = 0
+        self.deltadown = 0
+        self.e = 0.15
+        self.quality = [0]
 
     def handle_xml_request(self, msg):
         self.request_time = time.perf_counter()
@@ -35,14 +39,25 @@ class R2A_ExponentialWeightedMovingAverage(IR2A):
     def handle_segment_size_request(self, msg):
 
         self.request_time = time.perf_counter()
-        df = DataFrame (self.estimateband,columns=['throughputs'])
+        df = DataFrame (self.estimateband[-20:],columns=['throughputs'])
         df.ewm(alpha=0.5).mean()
         valor = df.values.tolist()[-1][-1]
         self.smooth.append((-self.alfa*(valor - self.estimateband[-1])*self.t) + valor)
 
+        self.deltaup = self.e * self.smooth[-1]
+        qualityup = self.smooth[-1] - self.deltaup
+        qualitydown = self.smooth[-1] - self.deltadown
+
+        if self.quality[-1] < qualityup:
+            self.quality.append(qualityup)
+        elif qualityup <= self.quality[-1] and self.quality[-1] <= qualitydown:
+            self.quality.append(self.quality[-1])
+        else:
+            self.quality.append(qualitydown)
+
         selected_qi = self.qi[0]
         for i in self.qi:
-            if self.smooth[-1] > i:
+            if self.quality[-1] > i:
                 selected_qi = i
 
         msg.add_quality_id(selected_qi)
