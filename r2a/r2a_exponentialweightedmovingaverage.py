@@ -33,7 +33,7 @@ class R2A_ExponentialWeightedMovingAverage(IR2A):
 
         self.t = time.perf_counter() - self.request_time
         self.throughputs.append(msg.get_bit_length() / self.t)
-        self.estimateband.append((10**6*self.k*(self.w - max(0,(self.estimateband[-1]-self.throughputs[-1] + self.w))))*self.t + self.estimateband[-1])
+        self.estimateband.append((10**6*self.k*(self.w - max(0,(self.estimateband[-1]-self.throughputs[-1] + self.w*10**6))))*self.t + self.estimateband[-1])
         self.send_up(msg)
         
     def handle_segment_size_request(self, msg):
@@ -66,7 +66,7 @@ class R2A_ExponentialWeightedMovingAverage(IR2A):
     def handle_segment_size_response(self, msg):
         self.t = time.perf_counter() - self.request_time
         self.throughputs.append(msg.get_bit_length() / self.t)
-        self.estimateband.append((10**6*self.k*(self.w - max(0,(self.estimateband[-1]-self.throughputs[-1] + self.w))))*self.t + self.throughputs[-1])
+        self.estimateband.append((10**6*self.k*(self.w - max(0,(self.estimateband[-1]-self.throughputs[-1] + self.w*10**6))))*self.t + self.throughputs[-1])
 
         self.send_up(msg)
 
