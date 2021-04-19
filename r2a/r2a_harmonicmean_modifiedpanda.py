@@ -3,7 +3,7 @@ from player.parser import *
 import time
 from statistics import harmonic_mean
 
-class R2A_HarmonicMean(IR2A):
+class R2A_HarmonicMean_ModifiedPanda(IR2A):
 
 
     def __init__(self, id):
@@ -30,39 +30,26 @@ class R2A_HarmonicMean(IR2A):
 
         self.t = time.perf_counter() - self.request_time
         self.throughputs.append(msg.get_bit_length() / self.t)
-        self.estimateband.append(((self.k*(self.w - max(0,(self.estimateband[-1]-self.throughputs[-1] + self.w))))*self.t) + self.estimateband[-1])
+        self.estimateband.append((self.k*(self.w - max(0,(self.estimateband[-1]-self.throughputs[-1] + self.w))*self.t) + self.throughputs[-1])) #modo PANDA para estimar a banda, porém utilizando throughput na última soma
+
         self.send_up(msg)
 
     def handle_segment_size_request(self, msg):
 
         self.request_time = time.perf_counter()
 
-        print(">>>>>>>>>>>>>>>>>>>>>>throughput<<<<<<<<<<<<<<<<<<<<<<")
-        print("throughput = ", self.throughputs[-1])
-
-        print(">>>>>>>>>>>>>>>>>>>>>>BANDA ESTIMADA<<<<<<<<<<<<<<<<<<<<<<")
-        print("Banda estimada: ", self.estimateband[-1])
-        print("Banda estimada: ", self.estimateband[-5::])
-
-
         if self.estimateband[-1] > 0 and self.estimateband[-2] > 0 and self.estimateband[-3] > 0 and self.estimateband[-4] > 0 and self.estimateband[-5] > 0:
-            valor = harmonic_mean(self.estimateband[-5::])
+            valor = harmonic_mean(self.estimateband[-5::]) #média dos últimos 5 números da banda estimada apenas se todos forem positivos
 
         else:
             valor = harmonic_mean(self.estimateband)
-
-        print(">>>>>>>>>>>>>>>>>>>>>>MÉDIA<<<<<<<<<<<<<<<<<<<<<<")
-        print("Média = ", valor)
-
+            
         self.smooth.append((-self.alfa*(valor - self.estimateband[-1])*self.t) + valor)
 
         delta_up = self.e * self.smooth[-1]
 
         selected_qi_up = self.smooth[-1] - delta_up
         selected_qi_down = self.smooth[-1]
-
-        print(">>>>>>>>>>>>>>>>>>>>>>QUALIDADEsssssss<<<<<<<<<<<<<<<<<<<<<<")
-        print("smooth = ", self.smooth[-1], "qualidade = ", self.quality[-1], "qi_up = ", selected_qi_up, "qi_down = ", selected_qi_down)
 
         if self.quality[-1] < selected_qi_up:
             self.quality[-1] = selected_qi_up
@@ -79,17 +66,13 @@ class R2A_HarmonicMean(IR2A):
             if self.quality[-1] > i:
                 selected_qi = i 
 
-        print(">>>>>>>>>>>>>>>>>>>>>>QUALIDADE<<<<<<<<<<<<<<<<<<<<<<")
-        print("Selected QI = ", selected_qi)
-
         msg.add_quality_id(selected_qi)
         self.send_down(msg)
 
     def handle_segment_size_response(self, msg):
         self.t = time.perf_counter() - self.request_time
         self.throughputs.append(msg.get_bit_length() / self.t)
-        self.estimateband.append((self.k*(self.w - (self.estimateband[-1]-self.throughputs[-1] + self.w))*self.t) + self.estimateband[-1])
-
+        self.estimateband.append((self.k*(self.w - max(0,(self.estimateband[-1]-self.throughputs[-1] + self.w))*self.t) + self.throughputs[-1]))
 
         self.send_up(msg)
 
