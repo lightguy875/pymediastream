@@ -14,8 +14,8 @@ class R2A_ExponentialWeightedMovingAverage(IR2A):
         self.qi = []
         self.smooth = [0]
         self.estimateband = [0]
-        self.k = 0.56
-        self.w = 0.3
+        self.k = 0.07
+        self.w = 0.4
         self.alfa = 0.2
         self.t = 0
         self.deltaup = 0
@@ -33,7 +33,7 @@ class R2A_ExponentialWeightedMovingAverage(IR2A):
 
         self.t = time.perf_counter() - self.request_time
         self.throughputs.append(msg.get_bit_length() / self.t)
-        self.estimateband.append((10**6*self.k*(self.w - max(0,(self.estimateband[-1]-self.throughputs[-1] + self.w*10**6))))*self.t + self.estimateband[-1])
+        self.estimateband.append((self.k*(self.w*10**6 - max(0,(self.estimateband[-1] - self.throughputs[-1] + self.w*10**6)))) + self.estimateband[-1])
         self.send_up(msg)
         
     def handle_segment_size_request(self, msg):
@@ -42,7 +42,7 @@ class R2A_ExponentialWeightedMovingAverage(IR2A):
         df = DataFrame (self.estimateband[-20:],columns=['throughputs'])
         df.ewm(alpha=0.5).mean()
         valor = df.values.tolist()[-1][-1]
-        self.smooth.append((-self.alfa*(valor - self.estimateband[-1])*self.t) + valor)
+        self.smooth.append((-self.alfa*( valor - self.estimateband[-1])*self.t) + valor)
 
         self.deltaup = self.e * self.smooth[-1]
         qualityup = self.smooth[-1] - self.deltaup
@@ -65,10 +65,15 @@ class R2A_ExponentialWeightedMovingAverage(IR2A):
 
     def handle_segment_size_response(self, msg):
         self.t = time.perf_counter() - self.request_time
-        self.throughputs.append(msg.get_bit_length() / self.t)
-        self.estimateband.append((10**6*self.k*(self.w - max(0,(self.estimateband[-1]-self.throughputs[-1] + self.w*10**6))))*self.t + self.throughputs[-1])
+        self.throughputs.append(msg.get_bit_length() / self.t)  
+        self.estimateband.append((self.k*(self.w*10**6 - max(0,(self.estimateband[-1] - self.throughputs[-1] + self.w*10**6)))) + self.estimateband[-1])
 
+        
+       
         self.send_up(msg)
+    #            print(self.throughputs[-1])
+    #    print(self.estimateband[-1])
+
 
     def initialize(self):
         pass
