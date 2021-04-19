@@ -44,20 +44,20 @@ class R2A_ExponentialWeightedMovingAverage(IR2A):
         valor = df.values.tolist()[-1][-1]
         self.smooth.append((-self.alfa*( valor - self.estimateband[-1])*self.t) + valor)
 
-        # self.deltaup = self.e * self.smooth[-1]
-        # qualityup = self.smooth[-1] - self.deltaup
-        # qualitydown = self.smooth[-1] - self.deltadown
+        self.deltaup = self.e * self.smooth[-1]
+        qualityup = self.smooth[-1] - self.deltaup
+        qualitydown = self.smooth[-1] - self.deltadown
 
-        # if self.quality[-1] < qualityup:
-        #     self.quality.append(qualityup)
-        # elif qualityup <= self.quality[-1] and self.quality[-1] <= qualitydown:
-        #     self.quality.append(self.quality[-1])
-        # else:
-        #     self.quality.append(qualitydown)
+        if self.quality[-1] < qualityup:
+            self.quality.append(qualityup)
+        elif qualityup <= self.quality[-1] and self.quality[-1] <= qualitydown:
+            self.quality.append(self.quality[-1])
+        else:
+            self.quality.append(qualitydown)
 
         selected_qi = self.qi[0]
         for i in self.qi:
-            if self.smooth[-1] > i:
+            if self.quality[-1] > i:
                 selected_qi = i
 
         msg.add_quality_id(selected_qi)
