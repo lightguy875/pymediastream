@@ -111,13 +111,6 @@ class R2A_ExponentialWeightedMovingAverage_Version2(IR2A):
             T_tio = self.t #somente definindo para ficar igual a equaçao 1 do artigo
         
             self.Tf = max(T_bar, T_tio)
-            
-        print("---------------------------->>>>>>")
-        print("self.throughputs [-1]", self.throughputs[-1])
-        print("self.estimateband[-1]", self.estimateband[-1])
-        print("self.smooth      [-1]", self.smooth[-1])
-        print("self.Tf          [-1]", self.Tf)
-        print("selected_qi          ", selected_qi)
 
     def handle_segment_size_response(self, msg):
         self.t = time.perf_counter() - self.request_time
