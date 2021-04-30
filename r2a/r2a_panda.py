@@ -6,6 +6,10 @@ from pandas import *
 import numpy as np
 from scipy import stats
 
+#@author Luís Eduardo Luz Silva 150137885
+#@author Victor Hugo Marques Vieira 150047649
+#@author Luísa Bueno Brito 160134579
+
 class R2A_Panda(IR2A):
 
 
