@@ -6,7 +6,7 @@ from pandas import *
 import numpy as np
 from scipy import stats
 
-class R2A_ExponentialWeightedMovingAverage_Version2(IR2A):
+class R2A_Panda(IR2A):
 
 
     def __init__(self, id):
